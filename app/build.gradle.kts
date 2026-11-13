@@ -16,14 +16,15 @@ android {
 
     defaultConfig {
         applicationId = "com.wangzan101.mika"
-        minSdk = 30
+        minSdk = 29
         targetSdk = 35
-        versionCode = 36
-        versionName = "0.1.35"
+        versionCode = 42
+        versionName = "0.1.41"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
         buildConfigField("boolean", "BETA", "true")
+        buildConfigField("boolean", "ADB_LOGS", "false")
     }
 
     // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
@@ -67,6 +68,17 @@ android {
             isProfileable = true
             matchingFallbacks += "release"
         }
+        // 本地日志检查包：并排安装，允许 adb run-as，首次启动即记录详细 Trace。
+        create("logs") {
+            initWith(getByName("perf"))
+            applicationIdSuffix = ".logs"
+            versionNameSuffix = "-logs"
+            isDebuggable = true
+            isProfileable = false
+            resValue("string", "app_name", "Mika Logs")
+            buildConfigField("boolean", "ADB_LOGS", "true")
+            matchingFallbacks += "release"
+        }
     }
 
     buildFeatures {
@@ -98,6 +110,8 @@ dependencies {
     // 两种识别模型都随 APK 安装；首次使用不依赖 Play 服务下载。
     implementation(libs.mlkit.text.recognition)
     implementation(libs.mlkit.text.recognition.chinese)
+    // 微信绑定二维码只在本机编码，不调用在线图片服务。
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
